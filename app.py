@@ -82,6 +82,15 @@ def feed_page():
                     st.warning("해당 날짜에 종료된 경기가 없습니다.")
 
         st.divider()
+        if st.button("발화글 전체 삭제", use_container_width=True):
+            conn = db.get_conn()
+            conn.execute("DELETE FROM posts")
+            conn.execute("DELETE FROM replies")
+            conn.commit()
+            conn.close()
+            st.success("삭제 완료!")
+            st.rerun()
+
         st.caption(f"닉네임: {st.session_state.nickname}")
 
     # --- Main Content ---
