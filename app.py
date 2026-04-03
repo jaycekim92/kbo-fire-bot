@@ -98,7 +98,7 @@ def feed_list_page():
     posts = db.get_posts(limit=50)
 
     if not posts:
-        st.info("아직 글이 없습니다. 사이드바에서 '샘플 경기 불러오기'를 눌러보세요!")
+        st.info("아직 글이 없습니다. 사이드바에서 날짜 설정 후 '발화글 생성'을 눌러보세요!")
         return
 
     for post in posts:
