@@ -57,12 +57,14 @@ def generate_fire_post(game, news):
     try:
         client = Groq(api_key=GROQ_API_KEY)
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=500,
+            model="qwen/qwen3-32b",
+            messages=[{"role": "user", "content": "/no_think\n" + prompt}],
+            max_tokens=300,
         )
         text = response.choices[0].message.content
         import re
+        # think 태그 제거
+        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
         # 힌디어, 러시아어, 한자, 일본어, 태국어 등 비한글/비영문 외국어만 제거
         text = re.sub(r'[\u0900-\u097F\u0400-\u04FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u0E00-\u0E7F\u0600-\u06FF\u3000-\u303F]+', '', text)
         text = re.sub(r' {2,}', ' ', text).strip()
