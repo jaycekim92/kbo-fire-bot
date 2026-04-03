@@ -75,11 +75,59 @@ def fetch_kbo_scores(game_date):
     return games
 
 
+TEAM_IDS = {
+    "키움": 382, "삼성": 383, "SSG": 384, "두산": 385, "롯데": 386,
+    "LG": 387, "KIA": 389, "한화": 390, "KT": 394601, "NC": 172615,
+}
+
+
 def fetch_kbo_news(home_team, away_team, game_date=None, max_count=3):
-    """Daum 뉴스에서 경기 관련 기사 크롤링"""
-    date_str = game_date.replace("-", ".") if game_date else ""
-    query = f"KBO {home_team} {away_team} {date_str}".strip()
-    url = f"https://search.daum.net/search?w=news&q={query}"
+    """Daum 스포츠 팀 뉴스 페이지에서 크롤링 (Playwright). 없으면 검색 fallback."""
+    if not HAS_PLAYWRIGHT:
+        return _fetch_news_search(home_team, away_team, game_date, max_count)
+
+    articles = []
+    for team in [home_team, away_team]:
+        tid = TEAM_IDS.get(team)
+        if not tid:
+            continue
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch()
+                page = browser.new_page()
+                page.goto(f"https://sports.daum.net/team/KBO/{tid}/news")
+                page.wait_for_timeout(3000)
+                html = page.content()
+                browser.close()
+
+            soup = BeautifulSoup(html, "html.parser")
+            for a in soup.find_all("a", href=True):
+                href = a["href"]
+                title = a.get_text(strip=True)
+                if title and len(title) > 15 and title not in articles:
+                    # 날짜 필터: 상대팀명이 포함된 기사 우선
+                    other = away_team if team == home_team else home_team
+                    if other in title or (game_date and game_date.replace("-", ".") in title):
+                        articles.append(title)
+            if len(articles) >= max_count:
+                break
+        except Exception:
+            continue
+
+    # 부족하면 일반 기사도 추가
+    if len(articles) < max_count:
+        articles = _fetch_news_search(home_team, away_team, game_date, max_count)
+
+    return articles[:max_count]
+
+
+def _fetch_news_search(home_team, away_team, game_date=None, max_count=3):
+    """Daum 뉴스 검색 (날짜 범위 필터 적용)"""
+    date_compact = game_date.replace("-", "") if game_date else ""
+    query = f"{home_team} {away_team} 경기"
+    url = f"https://search.daum.net/search?w=news&q={query}&sort=recency"
+    if date_compact:
+        url += f"&sd={date_compact}000000&ed={date_compact}235959&period=u"
     headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
     try:
         resp = requests.get(url, headers=headers, timeout=5)
