@@ -67,11 +67,12 @@ def feed_page():
         st.divider()
 
         st.markdown("### 발화글 생성")
+        available_dates = db.get_all_game_dates()
         with st.form("add_post"):
-            game_date = st.date_input("경기 날짜", value=datetime.now())
+            game_date = st.selectbox("경기 날짜", available_dates) if available_dates else None
             submitted = st.form_submit_button("발화글 생성", use_container_width=True)
-            if submitted:
-                date_str = game_date.strftime("%Y-%m-%d")
+            if submitted and game_date:
+                date_str = game_date
                 with st.spinner("발화글 생성 중..."):
                     results = bot.create_posts_for_date(date_str)
                 if results:
