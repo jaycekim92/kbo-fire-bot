@@ -75,9 +75,10 @@ def fetch_kbo_scores(game_date):
     return games
 
 
-def fetch_kbo_news(home_team, away_team, max_count=3):
+def fetch_kbo_news(home_team, away_team, game_date=None, max_count=3):
     """Daum 뉴스에서 경기 관련 기사 크롤링"""
-    query = f"KBO {home_team} {away_team}"
+    date_str = game_date.replace("-", ".") if game_date else ""
+    query = f"KBO {home_team} {away_team} {date_str}".strip()
     url = f"https://search.daum.net/search?w=news&q={query}"
     headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
     try:
