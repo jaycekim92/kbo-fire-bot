@@ -72,7 +72,7 @@ def feed_page():
             submitted = st.form_submit_button("발화글 생성", use_container_width=True)
             if submitted:
                 date_str = game_date.strftime("%Y-%m-%d")
-                with st.spinner("Daum 스포츠에서 경기결과 크롤링 중..."):
+                with st.spinner("발화글 생성 중..."):
                     results = bot.create_posts_for_date(date_str)
                 if results:
                     st.success(f"{len(results)}경기 발화글 생성 완료!")
