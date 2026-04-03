@@ -1,7 +1,12 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
+
+try:
+    from playwright.sync_api import sync_playwright
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
 
 KBO_TEAMS = ["KIA", "KT", "LG", "NC", "SSG", "두산", "롯데", "삼성", "키움", "한화"]
 TEAM_PATTERN = "|".join(KBO_TEAMS)
@@ -10,6 +15,9 @@ SCORE_RE = re.compile(rf"종료({TEAM_PATTERN})(\d+)({TEAM_PATTERN})(\d+)")
 
 def fetch_kbo_scores(game_date):
     """Daum 스포츠에서 해당 날짜 KBO 경기결과 크롤링 (Playwright)"""
+    if not HAS_PLAYWRIGHT:
+        print("Playwright 미설치 - 로컬에서 update.py로 실행하세요")
+        return []
     date_str = game_date.replace("-", "")
     url = f"https://sports.daum.net/schedule/kbo?date={date_str}"
 
