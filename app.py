@@ -115,8 +115,13 @@ def feed_list_page():
             with col3:
                 st.caption(post["created_at"][:16] if post["created_at"] else "")
 
-            # Content
-            st.markdown(post["content"])
+            # Content — 첫 줄(경기결과)과 본문 분리
+            lines = post["content"].strip().split("\n", 1)
+            score_line = lines[0].strip()
+            body = lines[1].strip() if len(lines) > 1 else ""
+            st.markdown(f"**{score_line}**")
+            if body:
+                st.markdown(body)
 
             # Actions
             col_like, col_reply, col_open = st.columns([1, 1, 2])
@@ -150,7 +155,12 @@ def post_detail_page(post_id):
     # Post
     author_display = "🤖 **발화봇**" if post["author"] == "fire_bot" else f"👤 **{post['author']}**"
     st.markdown(author_display)
-    st.markdown(f"### {post['content']}")
+    lines = post["content"].strip().split("\n", 1)
+    score_line = lines[0].strip()
+    body = lines[1].strip() if len(lines) > 1 else ""
+    st.markdown(f"## {score_line}")
+    if body:
+        st.markdown(f"### {body}")
 
     col_like, _ = st.columns([1, 4])
     with col_like:
