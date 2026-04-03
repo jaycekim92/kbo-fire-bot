@@ -36,20 +36,22 @@ def generate_fire_post(game, news):
 
 반드시 지킬 것:
 - 첫 줄은 반드시 "{game['away_team']} {game['away_score']} : {game['home_score']} {game['home_team']}" 이것만 써
-- 한국어만 써. 영어/외국어 절대 금지
+- 팀명(KIA, KT, LG, NC, SSG 등)은 반드시 영문 약어 그대로 써. 나머지는 한국어만
 - 150자 이내로 짧게
 - 초성체(ㅋㅋ, ㄷㄷ, ㄹㅇ 등) 쓰지 마
 - 뉴스 요약하지 말고, 하나의 포인트만 잡아서 네 의견처럼 써
 - 담백하게 쓰되, 마지막에 다른 팬들이 한마디 하고 싶어지는 질문이나 화두를 던져
 - 반드시 반말로 써. "~합니다", "~인가요?", "~일까요?" 같은 존댓말 절대 금지. "~인가?", "~아닌가?", "~인 듯", "~같은데" 이런 식으로
 
+중요: 팀명은 반드시 KIA, KT, LG, NC, SSG 이렇게 영문으로 써야 한다. "엘지", "기아", "엔씨" 이렇게 한글로 쓰지 마.
+
 좋은 예시:
-"KIA 2 : 7 LG
-웰스 6이닝 1실점인데 시범경기 폼은 진짜 몸풀기였나. 올해 LG 선발진 리그 탑이라고 봐도 되나?"
+"웰스 6이닝 1실점인데 시범경기 폼은 진짜 몸풀기였나. 올해 LG 선발진 리그 탑이라고 봐도 되나?"
+"NC 타선 진짜 무섭다. 롯데 불펜이 이걸 어떻게 막나?"
 
 나쁜 예시 (이렇게 쓰지 마):
-"LG가 오늘 좋은 경기를 했습니다. 웰스 투수가 안정적인 모습을 보여줬네요."
-"웰스 ㄷㄷㄷ 진짜 미쳤다 ㅋㅋㅋ LG 우승 가즈아!!"
+"엘지가 오늘 좋은 경기를 했습니다."
+"의 공격력이 좋았는데" (팀명 빠짐)
 """
 
     try:
@@ -61,15 +63,12 @@ def generate_fire_post(game, news):
         )
         text = response.choices[0].message.content
         import re
-        # 일본어/중국어/태국어 등 비한국어 문자만 제거 (영문은 팀명 때문에 유지)
-        text = re.sub(r'[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff\u0e00-\u0e7f]+', '', text)
-        # 영문 단어 중 KBO 관련 용어만 남기고 제거
-        keep = {'KIA','KT','LG','NC','SSG','KBO','MVP','QS','ERA','OPS','vs','HR'}
-        text = re.sub(r'[a-zA-Zà-žÀ-Ž]+', lambda m: m.group() if m.group() in keep else '', text)
+        # 힌디어, 러시아어, 한자, 일본어, 태국어 등 비한글/비영문 외국어만 제거
+        text = re.sub(r'[\u0900-\u097F\u0400-\u04FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u0E00-\u0E7F\u0600-\u06FF\u3000-\u303F]+', '', text)
         text = re.sub(r' {2,}', ' ', text).strip()
         return text
     except Exception as e:
-        print(f"Gemini API 호출 실패: {e}")
+        print(f"Groq API 호출 실패: {e}")
         return _fallback_post(game, news)
 
 
