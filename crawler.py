@@ -34,7 +34,6 @@ def fetch_kbo_scores(game_date):
     if len(tables) < 2:
         return []
 
-    # 날짜 포맷: "04.02" 형태로 매칭
     target_date = f"{game_date[5:7]}.{game_date[8:10]}"
     games = []
     current_date = ""
@@ -44,7 +43,6 @@ def fetch_kbo_scores(game_date):
         cells = row.find_all("td")
         text = row.get_text(strip=True)
 
-        # 날짜 셀 감지
         date_match = re.search(r"(\d{2}\.\d{2})", text)
         if date_match:
             current_date = date_match.group(1)
@@ -52,11 +50,9 @@ def fetch_kbo_scores(game_date):
         if current_date != target_date:
             continue
 
-        # "종료팀명스코어팀명스코어" 패턴 찾기
         m = SCORE_RE.search(text)
         if m:
             away_team, away_score, home_team, home_score = m.group(1), int(m.group(2)), m.group(3), int(m.group(4))
-            # 구장 찾기
             for cell in cells:
                 cell_text = cell.get_text(strip=True)
                 if "야구장" in cell_text or "파크" in cell_text or "돔" in cell_text or "볼파크" in cell_text:
@@ -75,53 +71,7 @@ def fetch_kbo_scores(game_date):
     return games
 
 
-TEAM_IDS = {
-    "키움": 382, "삼성": 383, "SSG": 384, "두산": 385, "롯데": 386,
-    "LG": 387, "KIA": 389, "한화": 390, "KT": 394601, "NC": 172615,
-}
-
-
 def fetch_kbo_news(home_team, away_team, game_date=None, max_count=3):
-    """Daum 스포츠 팀 뉴스 페이지에서 크롤링 (Playwright). 없으면 검색 fallback."""
-    if not HAS_PLAYWRIGHT:
-        return _fetch_news_search(home_team, away_team, game_date, max_count)
-
-    articles = []
-    for team in [home_team, away_team]:
-        tid = TEAM_IDS.get(team)
-        if not tid:
-            continue
-        try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch()
-                page = browser.new_page()
-                page.goto(f"https://sports.daum.net/team/KBO/{tid}/news")
-                page.wait_for_timeout(3000)
-                html = page.content()
-                browser.close()
-
-            soup = BeautifulSoup(html, "html.parser")
-            for a in soup.find_all("a", href=True):
-                href = a["href"]
-                title = a.get_text(strip=True)
-                if title and len(title) > 15 and title not in articles:
-                    # 날짜 필터: 상대팀명이 포함된 기사 우선
-                    other = away_team if team == home_team else home_team
-                    if other in title or (game_date and game_date.replace("-", ".") in title):
-                        articles.append(title)
-            if len(articles) >= max_count:
-                break
-        except Exception:
-            continue
-
-    # 부족하면 일반 기사도 추가
-    if len(articles) < max_count:
-        articles = _fetch_news_search(home_team, away_team, game_date, max_count)
-
-    return articles[:max_count]
-
-
-def _fetch_news_search(home_team, away_team, game_date=None, max_count=3):
     """Daum 뉴스 검색 (날짜 범위 필터 적용)"""
     date_compact = game_date.replace("-", "") if game_date else ""
     query = f"{home_team} {away_team} 경기"
