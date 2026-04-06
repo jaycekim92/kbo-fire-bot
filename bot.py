@@ -57,8 +57,8 @@ def generate_fire_post(game, news):
     try:
         client = Groq(api_key=GROQ_API_KEY)
         response = client.chat.completions.create(
-            model="qwen/qwen3-32b",
-            messages=[{"role": "user", "content": "/no_think\n" + prompt}],
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
         )
         text = response.choices[0].message.content
