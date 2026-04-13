@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .env
 update.py
+.DS_Store
+.streamlit/secrets.toml
